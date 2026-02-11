@@ -244,6 +244,11 @@ func run() error {
 	}
 	lifegame.InitRandom()
 
+	maze, err := NewMazeGame(displayBuffer)
+	if err != nil {
+		return err
+	}
+
 	for cont {
 		time.Sleep(1 * time.Millisecond)
 		err := d.Tick()
@@ -283,22 +288,28 @@ func run() error {
 		}
 
 		if cnt%32 == 16 {
-			lifegame.Update()
-			cells := lifegame.GetCells()
-			for y := range cells {
-				for x := range cells[y] {
-					color := textBlack
-					if cells[y][x] {
-						color = textWhite
+			if currentLayer == 0 {
+				lifegame.Update()
+				cells := lifegame.GetCells()
+				for y := range cells {
+					for x := range cells[y] {
+						color := textBlack
+						if cells[y][x] {
+							color = textWhite
+						}
+
+						displayBuffer.SetPixel(int16(x)*2+0, int16(y)*2+0, color)
+						displayBuffer.SetPixel(int16(x)*2+0, int16(y)*2+1, color)
+						displayBuffer.SetPixel(int16(x)*2+1, int16(y)*2+0, color)
+						displayBuffer.SetPixel(int16(x)*2+1, int16(y)*2+1, color)
 					}
-
-					displayBuffer.SetPixel(int16(x)*2+0, int16(y)*2+0, color)
-					displayBuffer.SetPixel(int16(x)*2+0, int16(y)*2+1, color)
-					displayBuffer.SetPixel(int16(x)*2+1, int16(y)*2+0, color)
-					displayBuffer.SetPixel(int16(x)*2+1, int16(y)*2+1, color)
 				}
+			} else {
+				for b := 0; b < len(displayBuffer.buffer); b++ {
+					displayBuffer.buffer[b] = 0
+				}
+				maze.Update(x.Get2(), y.Get2())
 			}
-
 			switch displayShowing {
 			case LAYER:
 				if currentLayer == 5 {
